@@ -67,8 +67,3 @@ function DreamFramework.spawnVehicle(vehicleModel, vehicleCoords, vehicleHeading
         cb(vehicle)
     end, vehicleCoords, true)
 end
-
-
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function ()
-    print("Player data loaded. Framework is ready.")
-end)
