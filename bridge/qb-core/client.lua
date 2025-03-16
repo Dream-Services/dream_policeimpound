@@ -23,16 +23,23 @@ end
 
 -- Player Data
 function DreamFramework.IsPlayerDataValid()
-    return QBCore.Functions.GetPlayerData() ~= nil
+    local playerData = QBCore.Functions.GetPlayerData()
+    return playerData ~= nil and playerData.job ~= nil 
 end
 
 function DreamFramework.getPlayerJob()
-    if not DreamFramework.IsPlayerDataValid() then return false end
+    while not DreamFramework.IsPlayerDataValid() do 
+        Citizen.Wait(500)
+    end
     return QBCore.Functions.GetPlayerData().job.name
 end
 
 function DreamFramework.getPlayerMoney(moneyWallet)
     local Player = QBCore.Functions.GetPlayerData()
+    while not Player or not Player.money do
+        Citizen.Wait(500)
+        Player = QBCore.Functions.GetPlayerData()
+    end
     if moneyWallet == 'money' then
         return Player.money['cash']
     elseif moneyWallet == 'bank' then
@@ -60,3 +67,8 @@ function DreamFramework.spawnVehicle(vehicleModel, vehicleCoords, vehicleHeading
         cb(vehicle)
     end, vehicleCoords, true)
 end
+
+
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function ()
+    print("Player data loaded. Framework is ready.")
+end)
