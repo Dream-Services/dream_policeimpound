@@ -17,10 +17,11 @@ local HasJob = false
 
 Citizen.CreateThread(function()
 	while not DreamFramework.getPlayerJob() do Citizen.Wait(250) end
-	HasJob = DreamFramework.getPlayerJob() == 'police'
+    local playerJob = DreamFramework.getPlayerJob()
+    HasJob = DreamCore.AllowedJobs[playerJob]
 
-	-- Init Job
-	if HasJob then InitPoliceImpound() end
+    -- Init Job
+    if HasJob then InitPoliceImpound() end
 
 	-- Impound Stations
 	for k, v in pairs(DreamCore.ImpoundStations) do
@@ -143,14 +144,14 @@ Citizen.CreateThread(function()
 end)
 
 function OnJobChange(job)
-	if job == 'police' then
-		RemovePoliceImpound()
-		InitPoliceImpound()
-		HasJob = true
-	else
-		RemovePoliceImpound()
-		HasJob = false
-	end
+    if DreamCore.AllowedJobs[job] then
+        RemovePoliceImpound()
+        InitPoliceImpound()
+        HasJob = true
+    else
+        RemovePoliceImpound()
+        HasJob = false
+    end
 end
 
 function InitPoliceImpound()

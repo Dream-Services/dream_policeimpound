@@ -10,7 +10,12 @@ DreamCore = {} -- Do not touch this!!!
 -- Dream Police Impound Settings
 DreamCore.Language = 'en'
 DreamCore.GiveCredits = true -- Set to false if you don't want to give credits
-
+DreamCore.AllowedJobs = { 
+    police = true,
+    --ambulance = true,
+    --mechanic = true,
+    -- Add more jobs as needed
+}
 DreamCore.ImpoundStatusIconColor = {
     [2] = '#d4af37',
     [3] = '#374f6b',
