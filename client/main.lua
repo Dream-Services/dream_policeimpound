@@ -37,6 +37,7 @@ Citizen.CreateThread(function()
 
 					if ImpoundData.success then
 						if HasJob then
+							local OwnLicense = DreamFramework.getLicense()
 							local ImpoundVehiclesOptions = {}
 
 							for k2, v2 in pairs(ImpoundData.data) do
@@ -52,28 +53,62 @@ Citizen.CreateThread(function()
 									{ label = Locales['LocalEntity']['ImpoundStation']['VehicleMetadata']['Note'],     value = v2.notes == '' and 'No Note' or v2.notes }
 								}
 
-								local VehicleOption = {
-									title = ('%s | %s'):format(v2.vehicle_plate, v2.status.name),
-									description = v2.status.id == 3 and Locales['LocalEntity']['ImpoundStation']['Menu']['PoliceVehicleUnlockDesc'] or Locales['LocalEntity']['ImpoundStation']['Menu']['PoliceVehicleDesc'],
-									icon = 'car',
-									iconColor = DreamCore.ImpoundStatusIconColor[v2.status.id],
-									iconAnimation = 'beatFade',
-									metadata = VehicleMetadata
-								}
+								-- Case the impounded vehicle is the own vehicle but you are police officer
+								if v2.vehicle_owner == OwnLicense then
+									-- Note: When the vehicle is locked then another police officer need to unlock. I think it's bad when the own player can unlock his own impounded vehicle, even he is a police man.
 
-								if v2.status.id == 3 then
-									VehicleOption.onSelect = function()
-										local result = lib.callback.await('dream_policeimpound:server:unlockVehicle', false, v2.id)
+									local VehicleOption = {
+										title = ('%s | %s'):format(v2.vehicle_plate, v2.status.name),
+										description = v2.status.id == 3 and Locales['LocalEntity']['ImpoundStation']['Menu']['VehicleUnlockDesc'] or Locales['LocalEntity']['ImpoundStation']['Menu']['VehicleDesc'],
+										icon = 'car',
+										iconColor = DreamCore.ImpoundStatusIconColor[v2.status.id],
+										iconAnimation = 'beatFade',
+										metadata = VehicleMetadata
+									}
 
-										if result.success then
-											TriggerEvent('dream_policeimpound:client:notify', result.message, 'success')
-										else
-											TriggerEvent('dream_policeimpound:client:notify', result.message, 'error')
+									if v2.status.id == 2 then
+										VehicleOption.onSelect = function()
+											local result = lib.callback.await('dream_policeimpound:server:parkOutVehicle', false, v2.id)
+
+											if result.success then
+												-- Spawn Vehicle again
+												DreamFramework.spawnVehicle(v2.vehicle.model, v.parkout.coords, v.parkout.heading, v2.vehicle, function(vehicle)
+													TaskWarpPedIntoVehicle(cache.ped, vehicle, -1)
+													TriggerEvent('dream_policeimpound:client:notify', result.message, 'success')
+												end)
+											else
+												TriggerEvent('dream_policeimpound:client:notify', result.message, 'error')
+											end
 										end
 									end
-								end
 
-								ImpoundVehiclesOptions[#ImpoundVehiclesOptions + 1] = VehicleOption
+									ImpoundVehiclesOptions[#ImpoundVehiclesOptions + 1] = VehicleOption
+								else
+									-- The impounded vehicle IS NOT owned by the current player
+
+									local VehicleOption = {
+										title = ('%s | %s'):format(v2.vehicle_plate, v2.status.name),
+										description = v2.status.id == 3 and Locales['LocalEntity']['ImpoundStation']['Menu']['PoliceVehicleUnlockDesc'] or Locales['LocalEntity']['ImpoundStation']['Menu']['PoliceVehicleDesc'],
+										icon = 'car',
+										iconColor = DreamCore.ImpoundStatusIconColor[v2.status.id],
+										iconAnimation = 'beatFade',
+										metadata = VehicleMetadata
+									}
+
+									if v2.status.id == 3 then
+										VehicleOption.onSelect = function()
+											local result = lib.callback.await('dream_policeimpound:server:unlockVehicle', false, v2.id)
+
+											if result.success then
+												TriggerEvent('dream_policeimpound:client:notify', result.message, 'success')
+											else
+												TriggerEvent('dream_policeimpound:client:notify', result.message, 'error')
+											end
+										end
+									end
+
+									ImpoundVehiclesOptions[#ImpoundVehiclesOptions + 1] = VehicleOption
+								end
 							end
 
 							lib.registerContext({

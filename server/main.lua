@@ -173,6 +173,7 @@ lib.callback.register('dream_policeimpound:server:getImpoundVehicles', function(
             ImpoundVehicles[k].offence = OffenceMapping[v.offence]
             ImpoundVehicles[k].vehicle = json.decode(v.vehicle)
             ImpoundVehicles[k].vehicle_plate = v.vehicle_plate
+            ImpoundVehicles[k].vehicle_owner = v.vehicle_owner
             ImpoundVehicles[k].vehicle_owner_name = v.vehicle_owner_name
             ImpoundVehicles[k].duration = os.date(DreamCore.ImpoundDurationFormat, math.floor(v.duration / 1000))
         end
