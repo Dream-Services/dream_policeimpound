@@ -11,6 +11,7 @@ DreamCore = {} -- Do not touch this!!!
 DreamCore.Language = 'en'
 DreamCore.GiveCredits = true -- Set to false if you don't want to give credits
 
+DreamCore.AllowedPoliceJobs = { 'police', 'sheriff' } -- Allowed Police Jobs
 DreamCore.ImpoundStatusIconColor = {
     [2] = '#d4af37',
     [3] = '#374f6b',

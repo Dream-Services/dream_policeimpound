@@ -134,7 +134,7 @@ lib.callback.register('dream_policeimpound:server:getImpoundVehicles', function(
         local Identifier = DreamFramework.GetIdentifier(source)
         local ImpoundVehicles = {}
 
-        if DreamFramework.getPlayerJob(source, 'name') == 'police' then
+        if IsInArray(DreamCore.AllowedPoliceJobs, DreamFramework.getPlayerJob(source, 'name')) then
             ImpoundVehicles = MySQL.Sync.fetchAll('SELECT * FROM police_impound WHERE NOT status = 1', {})
         else
             ImpoundVehicles = MySQL.Sync.fetchAll('SELECT * FROM police_impound WHERE vehicle_owner = @vehicle_owner AND NOT status = 1', {
@@ -248,4 +248,13 @@ function ShortOfficerName(OfficerName)
     local firstNameInitial = OfficerName:match("^(%a)") or ""
     local lastName = OfficerName:match("%s(%a+)$") or ""
     return firstNameInitial .. ". " .. lastName
+end
+
+function IsInArray(array, value)
+    for _, v in ipairs(array) do
+        if v == value then
+            return true
+        end
+    end
+    return false
 end

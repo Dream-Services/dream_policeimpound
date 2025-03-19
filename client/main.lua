@@ -17,7 +17,7 @@ local HasJob = false
 
 Citizen.CreateThread(function()
 	while not DreamFramework.getPlayerJob() do Citizen.Wait(250) end
-	HasJob = DreamFramework.getPlayerJob() == 'police'
+	HasJob = IsInArray(DreamCore.AllowedPoliceJobs, DreamFramework.getPlayerJob())
 
 	-- Init Job
 	if HasJob then InitPoliceImpound() end
@@ -143,7 +143,7 @@ Citizen.CreateThread(function()
 end)
 
 function OnJobChange(job)
-	if job == 'police' then
+	if IsInArray(DreamCore.AllowedPoliceJobs, job) then
 		RemovePoliceImpound()
 		InitPoliceImpound()
 		HasJob = true
@@ -281,6 +281,15 @@ function RoundNumber(value, decimalDigits)
 	else
 		return math.floor(value + 0.5)
 	end
+end
+
+function IsInArray(array, value)
+	for _, v in ipairs(array) do
+		if v == value then
+			return true
+		end
+	end
+	return false
 end
 
 RegisterNetEvent("dream_policeimpound:client:notify")
