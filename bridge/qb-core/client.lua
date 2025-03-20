@@ -23,16 +23,23 @@ end
 
 -- Player Data
 function DreamFramework.IsPlayerDataValid()
-    return QBCore.Functions.GetPlayerData() ~= nil
+    local playerData = QBCore.Functions.GetPlayerData()
+    return playerData ~= nil and playerData.job ~= nil
 end
 
 function DreamFramework.getPlayerJob()
-    if not DreamFramework.IsPlayerDataValid() then return false end
+    while not DreamFramework.IsPlayerDataValid() do
+        Citizen.Wait(500)
+    end
     return QBCore.Functions.GetPlayerData().job.name
 end
 
 function DreamFramework.getPlayerMoney(moneyWallet)
     local Player = QBCore.Functions.GetPlayerData()
+    while not Player or not Player.money do
+        Citizen.Wait(500)
+        Player = QBCore.Functions.GetPlayerData()
+    end
     if moneyWallet == 'money' then
         return Player.money['cash']
     elseif moneyWallet == 'bank' then
@@ -46,11 +53,6 @@ end
 RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
     OnJobChange(JobInfo.name)
 end)
-
-function DreamFramework.getLicense()
-    local Player = QBCore.Functions.GetPlayerData()
-    return Player.citizenid
-end
 
 function DreamFramework.getVehicleProperties(vehicle)
     return QBCore.Functions.GetVehicleProperties(vehicle)
