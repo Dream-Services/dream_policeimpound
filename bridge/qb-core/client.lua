@@ -54,11 +54,6 @@ RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
     OnJobChange(JobInfo.name)
 end)
 
-function DreamFramework.getLicense()
-    local Player = QBCore.Functions.GetPlayerData()
-    return Player.citizenid
-end
-
 function DreamFramework.getVehicleProperties(vehicle)
     return QBCore.Functions.GetVehicleProperties(vehicle)
 end
