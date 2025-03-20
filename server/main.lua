@@ -235,7 +235,7 @@ lib.callback.register('dream_policeimpound:server:parkOutVehicle', function(sour
 
                 return { success = true, message = Locales['LocalEntity']['ImpoundStation']['Notify']['ImpoundVehicleParkOut'] }
             else
-                return { success = false, message = Locales['GlobalVehicle']['ImpoundStation']['Notify']['ImpoundNotEnoughMoney'] }
+                return { success = false, message = Locales['LocalEntity']['ImpoundStation']['Notify']['ImpoundNotEnoughMoney'] }
             end
         else
             return { success = false, message = Locales['LocalEntity']['ImpoundStation']['Notify']['ImpoundVehicleDuration']:format(os.date(DreamCore.ImpoundDurationFormat, math.floor(ImpoundVehicleData.duration / 1000))) }
