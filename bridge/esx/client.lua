@@ -48,6 +48,11 @@ RegisterNetEvent('esx:setJob', function(job, lastJob)
     OnJobChange(job.name)
 end)
 
+function DreamFramework.getLicense()
+    local PlayerData = ESX.GetPlayerData()
+    return PlayerData.identifier
+end
+
 function DreamFramework.getVehicleProperties(vehicle)
     return ESX.Game.GetVehicleProperties(vehicle)
 end

@@ -37,7 +37,7 @@ CREATE TABLE police_impound (
     `officer` varchar(46) NOT NULL, -- Officer Identifier
     `officer_name` varchar(128) NOT NULL, 
     `status` int(1) DEFAULT 2,
-    `duration` timestamp DEFAULT NULL,
+    `duration` timestamp NULL DEFAULT NULL,
     `fine` int(11) DEFAULT 0,
     `offence` varchar(32) NOT NULL,
     `notes` LONGTEXT DEFAULT 'No extra notes',
@@ -45,8 +45,8 @@ CREATE TABLE police_impound (
     `vehicle_plate` varchar(64) DEFAULT 'Unknown',
     `vehicle_owner` varchar(46) NOT NULL, -- Owner Identifier
     `vehicle_owner_name` varchar(128) DEFAULT 'Unknown', -- Owner Name
-    `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
-    `created_at` timestamp DEFAULT CURRENT_TIMESTAMP(),
+    `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP(),
     PRIMARY KEY (`id`),
     -- FOREIGN KEY (`officer`) REFERENCES users(identifier), * Optional
     -- FOREIGN KEY (`vehicle_owner`) REFERENCES users(identifier), * Optional

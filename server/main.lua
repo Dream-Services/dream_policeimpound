@@ -134,7 +134,7 @@ lib.callback.register('dream_policeimpound:server:getImpoundVehicles', function(
         local Identifier = DreamFramework.GetIdentifier(source)
         local ImpoundVehicles = {}
 
-        if DreamFramework.getPlayerJob(source, 'name') == 'police' then
+        if IsInArray(DreamCore.AllowedPoliceJobs, DreamFramework.getPlayerJob(source, 'name')) then
             ImpoundVehicles = MySQL.Sync.fetchAll('SELECT * FROM police_impound WHERE NOT status = 1', {})
         else
             ImpoundVehicles = MySQL.Sync.fetchAll('SELECT * FROM police_impound WHERE vehicle_owner = @vehicle_owner AND NOT status = 1', {
@@ -173,6 +173,7 @@ lib.callback.register('dream_policeimpound:server:getImpoundVehicles', function(
             ImpoundVehicles[k].offence = OffenceMapping[v.offence]
             ImpoundVehicles[k].vehicle = json.decode(v.vehicle)
             ImpoundVehicles[k].vehicle_plate = v.vehicle_plate
+            ImpoundVehicles[k].vehicle_owner = v.vehicle_owner
             ImpoundVehicles[k].vehicle_owner_name = v.vehicle_owner_name
             ImpoundVehicles[k].duration = os.date(DreamCore.ImpoundDurationFormat, math.floor(v.duration / 1000))
         end
@@ -248,4 +249,13 @@ function ShortOfficerName(OfficerName)
     local firstNameInitial = OfficerName:match("^(%a)") or ""
     local lastName = OfficerName:match("%s(%a+)$") or ""
     return firstNameInitial .. ". " .. lastName
+end
+
+function IsInArray(array, value)
+    for _, v in ipairs(array) do
+        if v == value then
+            return true
+        end
+    end
+    return false
 end

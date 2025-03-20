@@ -24,11 +24,11 @@ end
 -- Player Data
 function DreamFramework.IsPlayerDataValid()
     local playerData = QBCore.Functions.GetPlayerData()
-    return playerData ~= nil and playerData.job ~= nil 
+    return playerData ~= nil and playerData.job ~= nil
 end
 
 function DreamFramework.getPlayerJob()
-    while not DreamFramework.IsPlayerDataValid() do 
+    while not DreamFramework.IsPlayerDataValid() do
         Citizen.Wait(500)
     end
     return QBCore.Functions.GetPlayerData().job.name
