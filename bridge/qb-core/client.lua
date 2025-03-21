@@ -69,6 +69,7 @@ function DreamFramework.spawnVehicle(vehicleModel, vehicleCoords, vehicleHeading
         SetEntityHeading(vehicle, vehicleHeading)
         QBCore.Functions.SetVehicleProperties(vehicle, VehicleProps)
         SetVehicleNumberPlateText(vehicle, VehicleProps.plate)
+        if GetResourceState('qb-vehiclekeys') == 'started' then TriggerEvent('vehiclekeys:client:SetOwner', VehicleProps.plate) end
         cb(vehicle)
     end, vehicleCoords, true)
 end
