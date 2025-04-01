@@ -50,7 +50,7 @@ Every aspect of the system, from impound durations to penalty structures, can be
 2. Add `ensure dream_policeimpound` to your `server.cfg`.  
 3. Configure settings in `/settings` to match your server’s preferences.  
 4. Adjust the bridge system `/bridge/<framework>/*.lua`, if necessary.  
-5. Ensure dependencies like `ox_lib` and `ox_target` are installed and running.  
+5. Ensure dependencies like `ox_lib` are installed and running.  
 
 ## ToDo  
 - [ ] Police Impound UI

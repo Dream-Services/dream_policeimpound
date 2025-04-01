@@ -48,3 +48,13 @@ DreamCore.ImpoundForm = {
         plate = false,
     }
 }
+
+DreamCore.Target = function()
+    if GetResourceState('ox_target') == 'started' then
+        return 'ox'
+    elseif GetResourceState('qb-target') == 'started' then
+        return 'qb'
+    else
+        return error('No target system found! Please adjust DreamCore.Target!!!')
+    end
+end
