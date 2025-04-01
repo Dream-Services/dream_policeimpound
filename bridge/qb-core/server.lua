@@ -162,9 +162,9 @@ end
 
 function DreamFramework.InsertOwnedVehicle(plate, owner, vehicle)
     local Player = DreamFramework.getPlayerFromId(owner)
-    if not Player then 
+    if not Player then
         print("[InsertOwnedVehicle] ERROR: Player not found for owner:", tostring(owner))
-        return 
+        return
     end
 
     local VehicleProps = json.decode(vehicle)
@@ -181,10 +181,10 @@ function DreamFramework.InsertOwnedVehicle(plate, owner, vehicle)
         vehname = GetDisplayNameFromVehicleModel(VehicleProps['model']):lower() -- Defaults to model name if not found
     end
 
-    print("[InsertOwnedVehicle] INSERTING Vehicle -> SpawnCode:", vehname, "Plate:", VehicleProps['plate'])
+    -- print("[InsertOwnedVehicle] INSERTING Vehicle -> SpawnCode:", vehname, "Plate:", VehicleProps['plate'])
 
     MySQL.Sync.execute('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (@license, @citizenid, @vehicle, @hash, @mods, @plate, @state)', {
-        ['@license'] = Player.PlayerData.license or "Unknown",
+        ['@license'] = Player.PlayerData.license,
         ['@citizenid'] = Player.PlayerData.citizenid,
         ['@vehicle'] = vehname, -- Vehicle spawn code (fixed)
         ['@hash'] = VehicleProps['model'],
@@ -193,7 +193,7 @@ function DreamFramework.InsertOwnedVehicle(plate, owner, vehicle)
         ['@state'] = 0,
     })
 
-    print("[InsertOwnedVehicle] SUCCESS: Vehicle inserted for plate:", VehicleProps['plate'])
+    -- print("[InsertOwnedVehicle] SUCCESS: Vehicle inserted for plate:", VehicleProps['plate'])
 end
 
 function DreamFramework.GetPlayerNameByIdentifier(identifier)
