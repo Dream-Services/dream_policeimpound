@@ -151,19 +151,49 @@ function DreamFramework.DeleteOwnedVehicle(plate)
     MySQL.Sync.execute('DELETE FROM player_vehicles WHERE plate = ?', { plate })
 end
 
+local function getVehicleFromVehList(hash)
+    for model, v in pairs(QBCore.Shared.Vehicles) do
+        if hash == v.hash then
+            return model -- Returns the spawn code, not the name
+        end
+    end
+    return nil -- If not found
+end
+
 function DreamFramework.InsertOwnedVehicle(plate, owner, vehicle)
     local Player = DreamFramework.getPlayerFromId(owner)
+    if not Player then 
+        print("[InsertOwnedVehicle] ERROR: Player not found for owner:", tostring(owner))
+        return 
+    end
+
     local VehicleProps = json.decode(vehicle)
+    if not VehicleProps or not VehicleProps['plate'] or not VehicleProps['model'] then
+        print("[InsertOwnedVehicle] ERROR: Invalid vehicle data for plate:", tostring(plate))
+        return
+    end
+
+    -- Find vehicle spawn code based on model hash
+    local vehname = getVehicleFromVehList(VehicleProps['model'])
+
+    if not vehname then
+        print("[InsertOwnedVehicle] WARNING: Vehicle model not found in QBCore.Shared.Vehicles. Using default hash.")
+        vehname = GetDisplayNameFromVehicleModel(VehicleProps['model']):lower() -- Defaults to model name if not found
+    end
+
+    print("[InsertOwnedVehicle] INSERTING Vehicle -> SpawnCode:", vehname, "Plate:", VehicleProps['plate'])
 
     MySQL.Sync.execute('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (@license, @citizenid, @vehicle, @hash, @mods, @plate, @state)', {
-        ['@license'] = Player.PlayerData.license,
+        ['@license'] = Player.PlayerData.license or "Unknown",
         ['@citizenid'] = Player.PlayerData.citizenid,
-        ['@vehicle'] = VehicleProps['name'],
+        ['@vehicle'] = vehname, -- Vehicle spawn code (fixed)
         ['@hash'] = VehicleProps['model'],
         ['@mods'] = vehicle,
         ['@plate'] = VehicleProps['plate'],
         ['@state'] = 0,
     })
+
+    print("[InsertOwnedVehicle] SUCCESS: Vehicle inserted for plate:", VehicleProps['plate'])
 end
 
 function DreamFramework.GetPlayerNameByIdentifier(identifier)
