@@ -40,7 +40,12 @@ DreamCore.ImpoundStations = {
     -- Add more Impound Stations here
 }
 DreamCore.ImpoundForm = {
-    DateFormat = "DD.MM.YYYY",
+    Duration = {
+        selection = 'date', -- date or time
+        formatDate = "DD.MM.YYYY",
+        formatTime = '24', -- 24 or 12
+    },
+    DurationSelection = 'time', -- date or time
     CustomFineAmount = false,
     DisableInput = {
         officer = true,

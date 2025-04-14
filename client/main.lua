@@ -214,10 +214,10 @@ function InitPoliceImpound()
 		local FormTranslation = Locales['GlobalVehicle']['ImpoundTarget']['Dialog']
 		local ImpoundFormData = lib.callback.await('dream_policeimpound:server:getFormData', false)
 		local ImpoundmentFormOptions = {
-			{ type = 'input', icon = 'user-tie',       label = FormTranslation.Officer,  required = true, default = ImpoundFormData.officerName, disabled = DreamCore.ImpoundForm.DisableInput.officer },
-			{ type = 'input', icon = 'car',            label = FormTranslation.Model,    required = true, default = VehicleProps.label,          disabled = DreamCore.ImpoundForm.DisableInput.model },
-			{ type = 'input', icon = 'bars-staggered', label = FormTranslation.Plate,    required = true, default = VehicleProps.plate,          disabled = DreamCore.ImpoundForm.DisableInput.plate },
-			{ type = 'date',  icon = 'calendar',       label = FormTranslation.Duration, required = true, default = true,                        format = DreamCore.ImpoundForm.DateFormat },
+			{ type = 'input',                                  icon = 'user-tie',       label = FormTranslation.Officer,  required = true, default = ImpoundFormData.officerName, disabled = DreamCore.ImpoundForm.DisableInput.officer },
+			{ type = 'input',                                  icon = 'car',            label = FormTranslation.Model,    required = true, default = VehicleProps.label,          disabled = DreamCore.ImpoundForm.DisableInput.model },
+			{ type = 'input',                                  icon = 'bars-staggered', label = FormTranslation.Plate,    required = true, default = VehicleProps.plate,          disabled = DreamCore.ImpoundForm.DisableInput.plate },
+			{ type = DreamCore.ImpoundForm.Duration.selection, icon = 'calendar',       label = FormTranslation.Duration, required = true, default = true,                        format = DreamCore.ImpoundForm.Duration.selection == 'date' and DreamCore.ImpoundForm.Duration.formatDate or DreamCore.ImpoundForm.Duration.formatTime },
 		}
 
 		-- All Offence to select
