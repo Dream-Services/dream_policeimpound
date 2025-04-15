@@ -6,9 +6,9 @@ lua54 'yes'
 
 author 'Dream Services | Tuncion'
 description 'https://discord.gg/zppUXj4JRm'
-version '1.0.2'
-patch '#21'
-released '01.04.2025, 23:34 by Tuncion'
+version '1.0.3'
+patch '#25'
+released '15.04.2025, 23:07 by Tuncion'
 
 client_scripts {
     'bridge/**/client.lua',
