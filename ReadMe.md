@@ -54,7 +54,7 @@ Every aspect of the system, from impound durations to penalty structures, can be
 
 ## ToDo  
 - [ ] Police Impound UI
-- [ ] Logs & Webhooks for impounds  
+- [x] Logs & Webhooks for impounds  
 
 ## Support  
 Need help or have suggestions?  

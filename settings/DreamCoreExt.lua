@@ -12,8 +12,10 @@ DreamCore.Webhooks = {
     -- Base Data
     Color = '10169855', -- Change the Color of the Webhook
     Author = 'Dream Police Impound', -- Change the Author of the Webhook
-    IconURL = 'https://i.ibb.co/KNS96CM/dreamservices-round.png', -- Change the IconURL of the Webhook
+    IconURL = 'https://i.imgur.com/vDc2B6l.png', -- Change the IconURL of the Webhook
 
     -- Webhook URLs
-    -- Currently no one
+    ImpoundVehicle = 'https://canary.discord.com/api/webhooks/XXX/XXX',
+    UnlockVehicle = 'https://canary.discord.com/api/webhooks/XXX/XXX',
+    ParkOutVehicle = 'https://canary.discord.com/api/webhooks/XXX/XXX',
 }

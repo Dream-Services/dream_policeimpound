@@ -118,6 +118,35 @@ lib.callback.register('dream_policeimpound:server:impoundVehicle', function(sour
                 TriggerClientEvent('dream_policeimpound:client:notify', DreamFramework.getPlayerSourceFromPlayer(xTarget), Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundInfo']:format(VehicleProps.plate))
             end
 
+            -- Webhook
+            if DreamCore.Webhooks.Enabled then
+                SendDiscordWebhook({
+                    link = DreamCore.Webhooks.ImpoundVehicle,
+                    color = DreamCore.Webhooks.Color,
+                    thumbnail = DreamCore.Webhooks.IconURL,
+                    author = {
+                        name = DreamCore.Webhooks.Author,
+                        icon_url = DreamCore.Webhooks.IconURL
+                    },
+                    title = "🚓 Impound Vehicle",
+                    description = ("**🆔 Officer ID:** `%s`\n**👮 Officer Name:** `%s`\n**📋 Offence:** `%s`\n**⏳ Duration:** `%s`\n**🔒 Lock:** `%s`\n**🏎️ Vehicle Plate:** `%s`\n**🧑 Vehicle Owner ID:** `%s`\n**🧑 Vehicle Owner Name:** `%s`\n**📝 Notes:** `%s`"):format(
+                        Identifier,
+                        ImpoundData.officer,
+                        ImpoundData.offence,
+                        os.date('%Y-%m-%d %H:%M:%S', math.floor(ImpoundData.duration / 1000)),
+                        ImpoundData.unlock and 'Need Unlock through LSPD' or 'No Unlock needed',
+                        VehicleProps.plate,
+                        VehicleOwner,
+                        DreamFramework.GetPlayerNameByIdentifier(VehicleOwner) or 'N/A',
+                        ImpoundData.note ~= '' and ImpoundData.note or "N/A"
+                    ),
+                    footer = {
+                        text = "Made with ❤️ by Dream Development",
+                        icon_url = DreamCore.Webhooks.IconURL
+                    },
+                })
+            end
+
             return { success = true, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundSuccess']:format(VehicleProps.plate) }
         else
             return { success = false, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundFail']['NoOwner']:format(VehicleProps.plate) }
@@ -197,6 +226,31 @@ lib.callback.register('dream_policeimpound:server:unlockVehicle', function(sourc
         TriggerClientEvent('dream_policeimpound:client:notify', DreamFramework.getPlayerSourceFromPlayer(xTarget), Locales['LocalEntity']['ImpoundStation']['Notify']['ImpoundVehicleUnlockInfo']:format(ImpoundVehicleData.vehicle_plate))
     end
 
+    -- Webhook
+    if DreamCore.Webhooks.Enabled then
+        SendDiscordWebhook({
+            link = DreamCore.Webhooks.UnlockVehicle,
+            color = DreamCore.Webhooks.Color,
+            thumbnail = DreamCore.Webhooks.IconURL,
+            author = {
+                name = DreamCore.Webhooks.Author,
+                icon_url = DreamCore.Webhooks.IconURL
+            },
+            title = "🚓 Vehicle Unlocked",
+            description = ("**🆔 Officer ID:** `%s`\n**👮 Officer Name:** `%s`\n**🏎️ Vehicle Plate:** `%s`\n**🧑 Vehicle Owner ID:** `%s`\n**🧑 Vehicle Owner Name:** `%s`"):format(
+                DreamFramework.GetIdentifier(source),
+                ShortOfficerName(DreamFramework.getPlayerName(source)),
+                ImpoundVehicleData?.vehicle_plate,
+                ImpoundVehicleData?.vehicle_owner,
+                ImpoundVehicleData?.vehicle_owner_name
+            ),
+            footer = {
+                text = "Made with ❤️ by Dream Development",
+                icon_url = DreamCore.Webhooks.IconURL
+            },
+        })
+    end
+
     return {
         success = true,
         message = Locales['LocalEntity']['ImpoundStation']['Notify']['PoliceVehicleUnlockSuccess']
@@ -233,6 +287,30 @@ lib.callback.register('dream_policeimpound:server:parkOutVehicle', function(sour
                 -- Insert in owned vehicles
                 DreamFramework.InsertOwnedVehicle(ImpoundVehicleData.vehicle_plate, Identifier, ImpoundVehicleData.vehicle)
 
+                -- Webhook
+                if DreamCore.Webhooks.Enabled then
+                    SendDiscordWebhook({
+                        link = DreamCore.Webhooks.ParkOutVehicle,
+                        color = DreamCore.Webhooks.Color,
+                        thumbnail = DreamCore.Webhooks.IconURL,
+                        author = {
+                            name = DreamCore.Webhooks.Author,
+                            icon_url = DreamCore.Webhooks.IconURL
+                        },
+                        title = "🚓 Vehicle Parked Out",
+                        description = ("**🏎️ Vehicle Plate:** `%s`\n**🧑 Vehicle Owner ID:** `%s`\n**🧑 Vehicle Owner Name:** `%s`\n**💸 Fine Paid:** `$%s`"):format(
+                            ImpoundVehicleData?.vehicle_plate,
+                            ImpoundVehicleData?.vehicle_owner,
+                            DreamFramework.GetPlayerNameByIdentifier(ImpoundVehicleData?.vehicle_owner),
+                            FineAmount
+                        ),
+                        footer = {
+                            text = "Made with ❤️ by Dream Development",
+                            icon_url = DreamCore.Webhooks.IconURL
+                        },
+                    })
+                end
+
                 return { success = true, message = Locales['LocalEntity']['ImpoundStation']['Notify']['ImpoundVehicleParkOut'] }
             else
                 return { success = false, message = Locales['LocalEntity']['ImpoundStation']['Notify']['ImpoundNotEnoughMoney'] }
@@ -258,4 +336,38 @@ function IsInArray(array, value)
         end
     end
     return false
+end
+
+function SendDiscordWebhook(WebhookData)
+    local EmbedDataArray = {}
+    local EmbedData = {}
+
+    EmbedData.color = WebhookData.color
+
+    if WebhookData.author then
+        EmbedData.author = {}
+        EmbedData.author.name = WebhookData.author.name
+        EmbedData.author.icon_url = WebhookData.author.icon_url
+    end
+
+    if WebhookData.title then
+        EmbedData.title = WebhookData.title
+    end
+
+    if WebhookData.thumbnail then
+        EmbedData.thumbnail = {}
+        EmbedData.thumbnail.url = WebhookData.thumbnail
+    end
+
+    EmbedData.description = WebhookData.description
+
+    if WebhookData.footer then
+        EmbedData.footer = {}
+        EmbedData.footer.text = WebhookData.footer.text
+        EmbedData.footer.icon_url = WebhookData.footer.icon_url
+    end
+
+    table.insert(EmbedDataArray, EmbedData)
+
+    PerformHttpRequest(WebhookData.link, function(err, text, headers) end, 'POST', json.encode({ embeds = EmbedDataArray }), { ['Content-Type'] = 'application/json' })
 end
