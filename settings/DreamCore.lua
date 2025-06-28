@@ -39,6 +39,7 @@ DreamCore.ImpoundStations = {
 
     -- Add more Impound Stations here
 }
+
 DreamCore.ImpoundForm = {
     Duration = {
         selection = 'date', -- date or time
@@ -52,6 +53,14 @@ DreamCore.ImpoundForm = {
         plate = false,
     }
 }
+
+--[[ QBCORE ONLY ]]
+
+--[[ If set to true, the vehicle will be deleted from player_vehicles until the fine is paid.]]
+--[[ If set to false, the vehicle's state will be updated to 2 (impounded). ]]
+DreamCore.DeleteVehicle = true
+
+--[[ QBCORE ONLY ]]
 
 DreamCore.Target = function()
     if GetResourceState('ox_target') == 'started' then
