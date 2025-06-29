@@ -148,7 +148,11 @@ function DreamFramework.GetOwnedVehicleOwner(plate)
 end
 
 function DreamFramework.DeleteOwnedVehicle(plate)
-    MySQL.Sync.execute('DELETE FROM player_vehicles WHERE plate = ?', { plate })
+    if DreamCore.DeleteVehicle then
+        MySQL.Sync.execute('DELETE FROM player_vehicles WHERE plate = ?', { plate })
+    else
+        MySQL.Sync.execute('UPDATE player_vehicles SET state = 2 WHERE plate = ?', { plate })
+    end
 end
 
 local function getVehicleFromVehList(hash)
@@ -183,15 +187,19 @@ function DreamFramework.InsertOwnedVehicle(plate, owner, vehicle)
 
     -- print("[InsertOwnedVehicle] INSERTING Vehicle -> SpawnCode:", vehname, "Plate:", VehicleProps['plate'])
 
-    MySQL.Sync.execute('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (@license, @citizenid, @vehicle, @hash, @mods, @plate, @state)', {
-        ['@license'] = Player.PlayerData.license,
-        ['@citizenid'] = Player.PlayerData.citizenid,
-        ['@vehicle'] = vehname, -- Vehicle spawn code (fixed)
-        ['@hash'] = VehicleProps['model'],
-        ['@mods'] = vehicle,
-        ['@plate'] = VehicleProps['plate'],
-        ['@state'] = 0,
-    })
+    if DreamCore.DeleteVehicle then
+        MySQL.Sync.execute('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (@license, @citizenid, @vehicle, @hash, @mods, @plate, @state)', {
+            ['@license'] = Player.PlayerData.license,
+            ['@citizenid'] = Player.PlayerData.citizenid,
+            ['@vehicle'] = vehname, -- Vehicle spawn code (fixed)
+            ['@hash'] = VehicleProps['model'],
+            ['@mods'] = vehicle,
+            ['@plate'] = VehicleProps['plate'],
+            ['@state'] = 0,
+        })
+    else
+        MySQL.Sync.execute('UPDATE player_vehicles SET state = 0 WHERE plate = ?', { plate })
+    end
 
     -- print("[InsertOwnedVehicle] SUCCESS: Vehicle inserted for plate:", VehicleProps['plate'])
 end
