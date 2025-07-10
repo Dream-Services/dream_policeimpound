@@ -177,17 +177,16 @@ function DreamFramework.InsertOwnedVehicle(plate, owner, vehicle)
         return
     end
 
-    -- Find vehicle spawn code based on model hash
-    local vehname = getVehicleFromVehList(VehicleProps['model'])
-
-    if not vehname then
-        print("[InsertOwnedVehicle] WARNING: Vehicle model not found in QBCore.Shared.Vehicles. Using default hash.")
-        vehname = GetDisplayNameFromVehicleModel(VehicleProps['model']):lower() -- Defaults to model name if not found
-    end
-
     -- print("[InsertOwnedVehicle] INSERTING Vehicle -> SpawnCode:", vehname, "Plate:", VehicleProps['plate'])
 
     if DreamCore.DeleteVehicle then
+        -- Find vehicle spawn code based on model hash
+        local vehname = getVehicleFromVehList(VehicleProps['model'])
+        if not vehname then
+            print(("[InsertOwnedVehicle] WARNING: Vehicle model %s not found in QBCore.Shared.Vehicles. You need to add it to the shared vehicles list! The vehicle will not be inserted into the database!"):format(VehicleProps['model']))
+            return
+        end
+
         MySQL.Sync.execute('INSERT INTO player_vehicles (license, citizenid, vehicle, hash, mods, plate, state) VALUES (@license, @citizenid, @vehicle, @hash, @mods, @plate, @state)', {
             ['@license'] = Player.PlayerData.license,
             ['@citizenid'] = Player.PlayerData.citizenid,
