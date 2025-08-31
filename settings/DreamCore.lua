@@ -60,6 +60,19 @@ DreamCore.ImpoundForm = {
         plate = false,
     }
 }
+DreamCore.TuncionXP = {
+    -- 🔗 Tuncion XP integration → https://github.com/Tuncion/tuncion_xp
+    -- ⚡ activate = true = use XP/Level system from Tuncion
+    -- ❌ activate = false = ignore / no XP integration
+    -- 🎯 adjust XP values below for specific actions
+
+    activate = false,
+    resourceName = 'tuncion_xp',
+
+    -- 📝 Actions (XP)
+    impoundVehicle = 10,
+    vehicleParkedOut = 5
+}
 
 --[[ QBCORE ONLY ]]
 

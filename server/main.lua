@@ -235,6 +235,12 @@ function ImpoundVehicle(OfficerIdentifier, VehicleProps, ImpoundData)
             })
         end
 
+        -- Tuncion XP
+        if DreamCore.TuncionXP.activate then
+            local xPlayer = DreamFramework.getPlayerFromId(OfficerIdentifier)
+            if xPlayer then exports[DreamCore.TuncionXP.resourceName]:addXP(DreamFramework.getPlayerSourceFromPlayer(xPlayer), DreamCore.TuncionXP.impoundVehicle, '🚓 Impound Vehicle') end
+        end
+
         return { success = true, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundSuccess']:format(VehicleProps.plate) }
     else
         return { success = false, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundFail']['NoOwner']:format(VehicleProps.plate) }
@@ -394,6 +400,11 @@ lib.callback.register('dream_policeimpound:server:parkOutVehicle', function(sour
                             icon_url = DreamCore.Webhooks.IconURL
                         },
                     })
+                end
+
+                -- Tuncion XP
+                if DreamCore.TuncionXP.activate then
+                    exports[DreamCore.TuncionXP.resourceName]:addXP(source, DreamCore.TuncionXP.vehicleParkedOut, '🚓 Vehicle Parked Out')
                 end
 
                 return { success = true, message = Locales['LocalEntity']['ImpoundStation']['Notify']['ImpoundVehicleParkOut'] }
