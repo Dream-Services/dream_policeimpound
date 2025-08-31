@@ -4,23 +4,33 @@
 // 📝 Date: 13.12.2024
 
 const fs = require("fs");
-const { execSync, exec } = require("child_process");
+const { execSync } = require("child_process");
 
 (async () => {
     const ReleaseType = process.env.RELEASE_TYPE || 'Release';
-
     const Changelog = [];
     const Contributors = {};
-    const LastTag = execSync(`git describe --tags --abbrev=0 HEAD^`).toString().trim();
 
-    // All Commits since last tag
+    // Get last tag when existing
+    let LastTag;
+    try {
+        LastTag = execSync(`git describe --tags --abbrev=0 HEAD^`).toString().trim();
+    } catch (err) {
+        LastTag = null;
+    }
+
+    // All Commits since last tag or all commits when no tag existing
+    const GitLogCommand = LastTag
+        ? `git log ${LastTag}..HEAD --pretty=format:"%H|%h|%s|%an|%ae|%ad"`
+        : `git log HEAD --pretty=format:"%H|%h|%s|%an|%ae|%ad"`;
+
     const AllCommitsSinceLastTag = [];
-    const GitLogSinceLastTag = execSync(`git log ${LastTag}..HEAD --pretty=format:"%H|%h|%s|%an|%ae|%ad"`)
+    const GitLogLastCommits = execSync(GitLogCommand)
         .toString()
         .trim()
         .split("\n");
 
-    GitLogSinceLastTag.forEach((commit) => {
+    GitLogLastCommits.forEach((commit) => {
         const [hash, short_hash, message, author, email, date] = commit.split("|");
         AllCommitsSinceLastTag.push({ hash, short_hash, message, author, email, date });
         Contributors[email] = author;
@@ -29,43 +39,48 @@ const { execSync, exec } = require("child_process");
     // Whats's Changed
     Changelog.push(`## What's Changed`);
 
-    const ChangedList = {
-        chores: [],
-        commits: [],
-    };
+    const ChangedList = {};
     AllCommitsSinceLastTag.forEach((commit) => {
-        if (commit.message.startsWith("chore:")) {
-            ChangedList.chores.push(commit);
+        let typeMatch = commit.message.match(/^(\w+)(\([^)]+\))?:/);
+
+        if (typeMatch) {
+            const type = typeMatch[1];
+            if (!ChangedList[type]) ChangedList[type] = [];
+            ChangedList[type].push(commit);
         } else {
-            ChangedList.commits.push(commit);
-        };
+            if (!ChangedList.general) ChangedList.general = [];
+            ChangedList.general.push(commit);
+        }
     });
 
-    // Chore
-    if (ChangedList.chores.length > 0) {
-        Changelog.push(`### Chores:`);
-        ChangedList.chores.forEach((commit) => {
-            Changelog.push(`- ${commit.short_hash}: ${commit.message} ([${commit.author}](https://github.com/${commit.author.replaceAll(' ', '%20')}))`);
+    const GitTypeNameMapping = {
+        feat: 'Features',
+        docs: 'Documentation',
+        perf: 'Performance Improvements',
+        refactor: 'Refactoring',
+        tweak: 'Tweak',
+        fix: 'Bug Fixes',
+        chore: 'Chores',
+        revert: 'Reverts'
+    };
+
+    const ChangedListSorted = Object.entries(ChangedList).sort(
+        ([a], [b]) =>
+            Object.keys(GitTypeNameMapping).indexOf(a) - Object.keys(GitTypeNameMapping).indexOf(b)
+    );
+
+    for (const [key, element] of ChangedListSorted) {
+        const sectionTitle = GitTypeNameMapping[key] || key.charAt(0).toUpperCase() + key.slice(1);
+        Changelog.push(`### ${sectionTitle}:`);
+
+        element.forEach((commit) => {
+            if (commit.message.startsWith('chore:')) {
+                Changelog.push(`- ${commit.short_hash}: ${commit.message} (🤖 Bot)`);
+            } else {
+                Changelog.push(`- ${commit.short_hash}: ${commit.message} (@${commit.author})`);
+            }
         });
-    };
-
-    // Commits
-    Changelog.push(`### Commits:`);
-    ChangedList.commits.forEach((commit) => {
-        Changelog.push(`- ${commit.short_hash}: ${commit.message} ([${commit.author}](https://github.com/${commit.author.replaceAll(' ', '%20')}))`);
-    });
-
-    // Contributor
-    Changelog.push(`\n## Contributors`);
-
-    for (const [email, author] of Object.entries(Contributors)) {
-        const response = await fetch(`https://api.github.com/users/${author}`);
-        if (!response.ok) continue;
-        const ContributorData = await response.json();
-        if (!ContributorData || !ContributorData.avatar_url) continue;
-        Changelog.push(`- [<img alt="${author}" src="${ContributorData.avatar_url}" width="20"> **${ContributorData.login}** (${ContributorData.name})](${ContributorData.html_url})`);
-    };
-    Changelog.push(`\n**Thank you for your contribution ❤️**`);
+    }
 
     // Disclaimer
     Changelog.push(`\n## Disclaimer`);

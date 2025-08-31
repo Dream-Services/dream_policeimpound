@@ -75,8 +75,8 @@ jobs:
         - name: Create Release Folder
           run: node .github/actions/create-release-folder.js
 
-        - name: Delete Development Enviroment
-          run: node .github/actions/delete-dev-enviroment.js
+        - name: Delete Development Environment
+          run: node .github/actions/delete-dev-environment.js
 
         - name: Archive Files
           run: node .github/actions/archive-files.js
