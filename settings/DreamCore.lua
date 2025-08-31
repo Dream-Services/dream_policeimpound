@@ -16,6 +16,13 @@ DreamCore.ImpoundStatusIconColor = {
     [2] = '#d4af37',
     [3] = '#374f6b',
 }
+DreamCore.ImpoundCommands = {
+    startAutoImpoundOldVehicles = 'policeautoimpound'
+}
+DreamCore.ImpoundAutomatic = {
+    interval = 30 * 60 * 1000, -- in ms
+    impoundAfter = 2 * 60 * 60 * 1000 -- in ms
+}
 DreamCore.ImpoundDurationFormat = '%d.%m.%Y %H:%M:%S'
 DreamCore.ImpoundStations = {
     {

@@ -70,6 +70,87 @@ end
 local Locales = DreamLocales[DreamCore.Language]
 
 -- Global Variables
+
+
+-- Auto Impound System
+local VehicleIdleTime = {}
+MySQL.ready(function()
+    -- Auto Impound
+    Citizen.CreateThread(function()
+        Citizen.Wait(5000)
+        while true do
+            Citizen.Wait(DreamCore.ImpoundAutomatic.interval)
+            AutoImpoundOldVehicles()
+        end
+    end)
+end)
+
+function AutoImpoundOldVehicles()
+    local VehiclePool = GetGamePool('CVehicle')
+    for i = 1, #VehiclePool do
+        local Vehicle = VehiclePool[i]
+        local Plate = GetVehicleNumberPlateText(Vehicle):match("^%s*(.-)%s*$")
+
+        --  Check if vehicle is free
+        local NobodyIsInVehicle = true
+        for i2 = 1, 10, 1 do
+            if GetPedInVehicleSeat(Vehicle, i2) ~= 0 then
+                NobodyIsInVehicle = false
+            end
+        end
+
+        if NobodyIsInVehicle then
+            -- Check idle time
+            if (os.time() - (VehicleIdleTime[Plate] or os.time())) >= math.floor(DreamCore.ImpoundAutomatic.impoundAfter / 1000) then
+                local VehicleData = DreamFramework.GetOwnedVehicleData(Plate)
+                if VehicleData then
+                    ImpoundVehicle('AUTOIMPOUND', VehicleData.props, {
+                        plate    = Plate,
+                        officer  = 'Auto Impound',
+                        unlock   = false,
+                        offence  = 'auto_impound',
+                        duration = math.floor(os.time() * 1000),
+                        note     = ''
+                    })
+                    DeleteEntity(Vehicle)
+                end
+            end
+        end
+    end
+end
+
+RegisterCommand(DreamCore.ImpoundCommands.startAutoImpoundOldVehicles, function(source, args, rawCommand)
+    AutoImpoundOldVehicles()
+end, true)
+
+-- I used baseevents here because I don't want to make something own which increase the resmon only for one script.
+-- Newer framework versions also have such events by default, which you can use to save yourself baseevents.
+-- ℹ️ Just replace the events and adjust the params to your own events. Currently I just need the NetworkId of the entity (vehicle)
+RegisterNetEvent('baseevents:enteredVehicle')
+AddEventHandler('baseevents:enteredVehicle', function(CurrentVehicle, currentSeat, VehicleDisplayName, VehicleNetId)
+    local Vehicle = NetworkGetEntityFromNetworkId(VehicleNetId)
+    local Plate = GetVehicleNumberPlateText(Vehicle):match("^%s*(.-)%s*$")
+
+    local NobodyIsInVehicle = true
+    for i = 1, 10, 1 do
+        if GetPedInVehicleSeat(Vehicle, i) ~= 0 then
+            NobodyIsInVehicle = false
+        end
+    end
+
+    if NobodyIsInVehicle then
+        VehicleIdleTime[Plate] = nil
+    end
+end)
+
+RegisterNetEvent('baseevents:leftVehicle')
+AddEventHandler('baseevents:leftVehicle', function(CurrentVehicle, CurrentSeat, VehicleDisplayName, VehicleNetId)
+    local Vehicle = NetworkGetEntityFromNetworkId(VehicleNetId)
+    local Plate = GetVehicleNumberPlateText(Vehicle):match("^%s*(.-)%s*$")
+    VehicleIdleTime[Plate] = os.time()
+end)
+-------------------------------------------------------------------------------------------------------------------------------
+
 lib.callback.register('dream_policeimpound:server:getFormData', function(source)
     local source = source
     local OfficerName = 'Unknown'
@@ -88,73 +169,77 @@ lib.callback.register('dream_policeimpound:server:getFormData', function(source)
 end)
 
 lib.callback.register('dream_policeimpound:server:impoundVehicle', function(source, VehicleProps, ImpoundData)
-    local source = source
-    local Identifier = DreamFramework.GetIdentifier(source)
+    local src = source
+    local Identifier = DreamFramework.GetIdentifier(src)
 
     if Identifier then
-        local VehicleOwner = DreamFramework.GetOwnedVehicleOwner(VehicleProps.plate)
-        if VehicleOwner then
-            -- Insert Impound Data
-            MySQL.Sync.execute('INSERT INTO police_impound (officer, officer_name, status, duration, fine, offence, notes, vehicle, vehicle_plate, vehicle_owner, vehicle_owner_name) VALUES (@officer, @officer_name, @status, @duration, @fine, @offence, @notes, @vehicle, @vehicle_plate, @vehicle_owner, @vehicle_owner_name)', {
-                ['@officer'] = Identifier,
-                ['@officer_name'] = ImpoundData.officer,
-                ['@status'] = ImpoundData.unlock and 3 or 2,
-                ['@duration'] = os.date('%Y-%m-%d %H:%M:%S', math.floor(ImpoundData.duration / 1000)),
-                ['@fine'] = ImpoundData.fine, -- Not used it's NULL
-                ['@offence'] = ImpoundData.offence,
-                ['@notes'] = ImpoundData.note,
-                ['@vehicle'] = json.encode(VehicleProps),
-                ['@vehicle_plate'] = VehicleProps.plate,
-                ['@vehicle_owner'] = VehicleOwner,
-                ['@vehicle_owner_name'] = DreamFramework.GetPlayerNameByIdentifier(VehicleOwner),
-            })
-
-            -- Delete from owned vehicles db
-            DreamFramework.DeleteOwnedVehicle(VehicleProps.plate)
-
-            -- Try to notify the owner
-            local xTarget = DreamFramework.getPlayerFromId(VehicleOwner)
-            if xTarget then
-                TriggerClientEvent('dream_policeimpound:client:notify', DreamFramework.getPlayerSourceFromPlayer(xTarget), Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundInfo']:format(VehicleProps.plate))
-            end
-
-            -- Webhook
-            if DreamCore.Webhooks.Enabled then
-                SendDiscordWebhook({
-                    link = DreamCore.Webhooks.ImpoundVehicle,
-                    color = DreamCore.Webhooks.Color,
-                    thumbnail = DreamCore.Webhooks.IconURL,
-                    author = {
-                        name = DreamCore.Webhooks.Author,
-                        icon_url = DreamCore.Webhooks.IconURL
-                    },
-                    title = "🚓 Impound Vehicle",
-                    description = ("**🆔 Officer ID:** `%s`\n**👮 Officer Name:** `%s`\n**📋 Offence:** `%s`\n**⏳ Duration:** `%s`\n**🔒 Lock:** `%s`\n**🏎️ Vehicle Plate:** `%s`\n**🧑 Vehicle Owner ID:** `%s`\n**🧑 Vehicle Owner Name:** `%s`\n**📝 Notes:** `%s`"):format(
-                        Identifier,
-                        ImpoundData.officer,
-                        ImpoundData.offence,
-                        os.date('%Y-%m-%d %H:%M:%S', math.floor(ImpoundData.duration / 1000)),
-                        ImpoundData.unlock and 'Need Unlock through LSPD' or 'No Unlock needed',
-                        VehicleProps.plate,
-                        VehicleOwner,
-                        DreamFramework.GetPlayerNameByIdentifier(VehicleOwner) or 'N/A',
-                        ImpoundData.note ~= '' and ImpoundData.note or "N/A"
-                    ),
-                    footer = {
-                        text = "Made with ❤️ by Dream Development",
-                        icon_url = DreamCore.Webhooks.IconURL
-                    },
-                })
-            end
-
-            return { success = true, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundSuccess']:format(VehicleProps.plate) }
-        else
-            return { success = false, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundFail']['NoOwner']:format(VehicleProps.plate) }
-        end
+        return ImpoundVehicle(Identifier, VehicleProps, ImpoundData)
     else
         return { success = false, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundFail']['WrongIdentifer']:format(VehicleProps.plate) }
     end
 end)
+
+function ImpoundVehicle(OfficerIdentifier, VehicleProps, ImpoundData)
+    local VehicleOwner = DreamFramework.GetOwnedVehicleOwner(VehicleProps.plate)
+    if VehicleOwner then
+        -- Insert Impound Data
+        MySQL.Sync.execute('INSERT INTO police_impound (officer, officer_name, status, duration, fine, offence, notes, vehicle, vehicle_plate, vehicle_owner, vehicle_owner_name) VALUES (@officer, @officer_name, @status, @duration, @fine, @offence, @notes, @vehicle, @vehicle_plate, @vehicle_owner, @vehicle_owner_name)', {
+            ['@officer'] = OfficerIdentifier,
+            ['@officer_name'] = ImpoundData.officer,
+            ['@status'] = ImpoundData.unlock and 3 or 2,
+            ['@duration'] = os.date('%Y-%m-%d %H:%M:%S', math.floor(ImpoundData.duration / 1000)),
+            ['@fine'] = ImpoundData.fine, -- Not used it's NULL
+            ['@offence'] = ImpoundData.offence,
+            ['@notes'] = ImpoundData.note,
+            ['@vehicle'] = json.encode(VehicleProps),
+            ['@vehicle_plate'] = VehicleProps.plate,
+            ['@vehicle_owner'] = VehicleOwner,
+            ['@vehicle_owner_name'] = DreamFramework.GetPlayerNameByIdentifier(VehicleOwner),
+        })
+
+        -- Delete from owned vehicles db
+        DreamFramework.DeleteOwnedVehicle(VehicleProps.plate)
+
+        -- Try to notify the owner
+        local xTarget = DreamFramework.getPlayerFromId(VehicleOwner)
+        if xTarget then
+            TriggerClientEvent('dream_policeimpound:client:notify', DreamFramework.getPlayerSourceFromPlayer(xTarget), Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundInfo']:format(VehicleProps.plate))
+        end
+
+        -- Webhook
+        if DreamCore.Webhooks.Enabled then
+            SendDiscordWebhook({
+                link = DreamCore.Webhooks.ImpoundVehicle,
+                color = DreamCore.Webhooks.Color,
+                thumbnail = DreamCore.Webhooks.IconURL,
+                author = {
+                    name = DreamCore.Webhooks.Author,
+                    icon_url = DreamCore.Webhooks.IconURL
+                },
+                title = "🚓 Impound Vehicle",
+                description = ("**🆔 Officer ID:** `%s`\n**👮 Officer Name:** `%s`\n**📋 Offence:** `%s`\n**⏳ Duration:** `%s`\n**🔒 Lock:** `%s`\n**🏎️ Vehicle Plate:** `%s`\n**🧑 Vehicle Owner ID:** `%s`\n**🧑 Vehicle Owner Name:** `%s`\n**📝 Notes:** `%s`"):format(
+                    OfficerIdentifier,
+                    ImpoundData.officer,
+                    ImpoundData.offence,
+                    os.date('%Y-%m-%d %H:%M:%S', math.floor(ImpoundData.duration / 1000)),
+                    ImpoundData.unlock and 'Need Unlock through LSPD' or 'No Unlock needed',
+                    VehicleProps.plate,
+                    VehicleOwner,
+                    DreamFramework.GetPlayerNameByIdentifier(VehicleOwner) or 'N/A',
+                    ImpoundData.note ~= '' and ImpoundData.note or "N/A"
+                ),
+                footer = {
+                    text = "Made with ❤️ by Dream Development",
+                    icon_url = DreamCore.Webhooks.IconURL
+                },
+            })
+        end
+
+        return { success = true, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundSuccess']:format(VehicleProps.plate) }
+    else
+        return { success = false, message = Locales['GlobalVehicle']['ImpoundTarget']['Notify']['ImpoundFail']['NoOwner']:format(VehicleProps.plate) }
+    end
+end
 
 lib.callback.register('dream_policeimpound:server:getImpoundVehicles', function(source)
     local source = source

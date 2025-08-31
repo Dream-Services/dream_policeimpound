@@ -6,6 +6,7 @@ CREATE TABLE police_impound_offence (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 INSERT INTO police_impound_offence (`id`, `name`, `amount`) VALUES
+('auto_impound', 'Auto Impound', 50),
 ('illegal_parking', 'Illegal Parking', 150),
 ('abandoned_vehicle', 'Abandoned Vehicle', 200),
 ('unregistered_vehicle', 'Unregistered Vehicle', 300),

@@ -147,6 +147,17 @@ function DreamFramework.GetOwnedVehicleOwner(plate)
     return result and result.citizenid or nil
 end
 
+function DreamFramework.GetOwnedVehicleData(plate)
+    local result = MySQL.Sync.fetchAll('SELECT * FROM player_vehicles WHERE plate = ?', { plate })[1]
+    if result then
+        return {
+            props = json.decode(result.mods)
+        }
+    else
+        return nil
+    end
+end
+
 function DreamFramework.DeleteOwnedVehicle(plate)
     if DreamCore.DeleteVehicle then
         MySQL.Sync.execute('DELETE FROM player_vehicles WHERE plate = ?', { plate })

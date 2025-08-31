@@ -35,5 +35,6 @@ escrow_ignore {
 }
 
 dependencies {
-    'ox_lib'
+    'ox_lib',
+    'baseevents' -- ⚠️ Remove if you changed the logic in the server.lua
 }

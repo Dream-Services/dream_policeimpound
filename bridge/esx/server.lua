@@ -130,10 +130,26 @@ end
 
 -- Dream Police Impound
 function DreamFramework.GetOwnedVehicleOwner(plate)
+    plate = plate:match("^%s*(.-)%s*$")
     local result = MySQL.Sync.fetchAll('SELECT * FROM owned_vehicles WHERE plate = @plate', {
         ['@plate'] = plate
     })?[1]
     return result?.owner
+end
+
+function DreamFramework.GetOwnedVehicleData(plate)
+    plate = plate:match("^%s*(.-)%s*$")
+    local result = MySQL.Sync.fetchAll('SELECT * FROM owned_vehicles WHERE plate = @plate', {
+        ['@plate'] = plate
+    })?[1]
+
+    if result then
+        return {
+            props = json.decode(result.vehicle)
+        }
+    else
+        return nil
+    end
 end
 
 function DreamFramework.DeleteOwnedVehicle(plate)
